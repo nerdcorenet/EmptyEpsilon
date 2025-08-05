@@ -1396,6 +1396,7 @@ function askForDirections(s,t)
    -- Break into submenus just to keep the lists manageable for Comms Officer.
    addCommsReply("Find a planet or moon", askForDirPlanet)
    addCommsReply("Find a station", askForDirStation)
+   addCommsReply("Back", hqComms)
 end
 function askForDirPlanet(s,t)
    setCommsMessage("Which celestial body do you need to locate?")
@@ -1410,6 +1411,7 @@ function askForDirPlanet(s,t)
 	 end)
       end
    end
+   addCommsReply("Back", askForDirections)
 end
 function askForDirStation(s,t)
    setCommsMessage("Which space station do you need to locate?")
@@ -1422,13 +1424,15 @@ function askForDirStation(s,t)
 	 end)
       elseif f == "Independent" then
 	 addCommsReply(name, function()
+			  local sx, sy = config["instance"]:getPosition()
 			  -- Fudge the numbers a bit
-			  local sx = random(sx-30000, sx+30000)
-			  local sy = random(sy-30000, sy+30000)
+			  sx = random(sx-30000, sx+30000)
+			  sy = random(sy-30000, sy+30000)
 			  setCommsMessage("Our long range radar suggests you might find the " .. config["faction"] .. " station " .. name .. " at approximately sector " .. getSectorName(sx, sy) .. ".\n\nHowever, please note that because this is not a Human Navy station our records may be a bit off.")
 	 end)
       end
    end
+   addCommsReply("Back", askForDirections)
 end
 function askForKraylor(s,t)
    s:addReputationPoints(100)
@@ -2773,6 +2777,7 @@ onNewPlayerShip(
       --ship:addCustomButton("Engineering", "showHeat", "Show Heat Values", function() showHeat(ship) end)
       --ship:addCustomInfo("engineering","show_coolant_max","Coolant Max: " .. ship:getMaxCoolant(),0)
 
+      -- TODO: Advance range as the scenario progresses
       --ship:setLongRangeRadarRange(50000)
       ship:setLongRangeRadarRange(100000)
 
@@ -2786,14 +2791,14 @@ onNewPlayerShip(
       ship.prevTarget = nil
 
       -- DEBUG Advance progress here to be able to test later missions
-      progress["whAllow"] = true
-      progress["mercury"] = 200
-      progress["venus"] = 100
-      ghost_stns = {}
-      progress["mars"] = 200
+      --progress["whAllow"] = true
+      --progress["mercury"] = 200
+      --progress["venus"] = 100
+      --ghost_stns = {}
+      --progress["mars"] = 200
       --progress["belt"] = 1
-      progress["juVisits"] = {"JU-HQ","JU-IO","JU-EU","JU-GA","JU-CA"}
-      progress["saturn"] = 1000
+      --progress["juVisits"] = {"JU-HQ","JU-IO","JU-EU","JU-GA","JU-CA"}
+      --progress["saturn"] = 1000
       --progress["outer"] = 1
 
       -- DEBUG Special Beams needed to test other missions
