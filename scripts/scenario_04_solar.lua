@@ -1648,7 +1648,9 @@ end
 -- Fires a single locator beam towards Earth.
 function lsCommsAddBlueBeam(s,t)
    s:addCustomButton("Science", "s-blueBeamButton", "Homing beam", function() weaponBeamBlue(s) end)
+   s:addCustomMessage("Science","s-blueBeam","Use the \"<\" and \">\" arrows to access the Homing Beam.")
    s:addCustomButton("Operations", "o-blueBeamButton", "Homing beam", function() weaponBeamBlue(s) end)
+   s:addCustomMessage("Operations","o-blueBeam","Use the \"<\" and \">\" arrows to access the Homing Beam.")
    s:addCustomButton("Single", "single-blueBeamButton", "Homing beam", function() weaponBeamBlue(s) end)
    setCommsMessage("Blue beam added.\n\nYour Science and Operations consoles can use the blue beam to return to Earth. (HINT: Try clicking the \"<\" and \">\" arrows)")
    addCommsReply("Back", lsComms)
