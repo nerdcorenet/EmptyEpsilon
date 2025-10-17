@@ -1205,12 +1205,13 @@ end
 function makeGhostShips()
    -- FIXME: Protect VE-IX somehow
    local v = stations["VE-IX"]["instance"]
+   if v == nil then return end
+   if not v:isValid() then return end
    if v.defense ~= nil then
       if v.defense < 3 then
 	 makeDefender(v)
       end
    end
-   if v == nil then return end
    for i,stn in ipairs(ghost_stns) do
       if stn:isValid() then
 	 local sx, sy = stn:getPosition()
@@ -1705,9 +1706,9 @@ end
 function lsCommsLoungeHN(s,t)
    setCommsMessage("\"WOW! Thanks, friends! If you ever need assistance give us a shout.\"\n\nThey seemed to really appreciate your generosity.")
    addCommsReply("Back", lsCommsLounge)
-   s:addCustomButton("Relay", "relayFriends", _("relay-HNButton", "Send Backup"), function() relayFriends(s) end)
-   s:addCustomButton("AltRelay", "arelayFriends", _("arelay-HNButton", "Send Backup"), function() relayFriends(s) end)
-   s:addCustomButton("Single", "singleFriends", _("single-HNButton", "Send Backup"), function() relayFriends(s) end)
+   s:addCustomButton("Relay", "relayFriends", "Send Backup", function() relayFriends(s) end)
+   s:addCustomButton("AltRelay", "arelayFriends", "Send Backup", function() relayFriends(s) end)
+   s:addCustomButton("Single", "singleFriends", "Send Backup", function() relayFriends(s) end)
 end
 function relayFriends(ship)
    if ship:getReputationPoints() >= 100 then
@@ -1842,8 +1843,8 @@ end
 function moCommsSearch(s,t)
    progress["mars"] = 2
    local bi = 0
-   local values = barc_colours[irandom(1,#barc_colours)]
    repeat
+      local values = barc_colours[irandom(1,#barc_colours)]
       s:setBeamWeaponArcColor(bi, values[1],  values[2],  values[3],  values[4],  values[5], values[6])
       bi = bi+1
    until(s:getBeamWeaponRange(bi) < 1)
@@ -2175,6 +2176,7 @@ function beComms(s,t)
    elseif progress["belt"] < 100 then
       setCommsMessage("You know Bagu? Then I can tell you something.\n\nFollow the sprite to make your way to Ceres.")
       addCommsReply("Thanks!", beComms)
+      addCommsReply("Directions", beDirs)
    else
       setCommsMessage("Seems you've already toured what the belt has to offer.")
       addCommsReply("Okay", beComms)
@@ -2223,7 +2225,9 @@ function spriteHit(ship, bc)
 	 --progress["belt"] = 1
 	 ship:addToShipLog("OUCH!", "Red")
 	 --unknown.hitwith = {}
-	 return
+	 if (#unknown.hitwith < 5) then
+	    return
+	 end
       end
    end
    table.insert(unknown.hitwith, bc)
@@ -2243,7 +2247,7 @@ function spriteHit(ship, bc)
       local vx,vy = bodies["Vesta"]["instance"]:getPosition()
       local vcr = angleRotation(bodies["Vesta"]["instance"], bodies["Ceres"]["instance"])
       local vcd = distance(bodies["Vesta"]["instance"], bodies["Ceres"]["instance"])
-      setCirclePos(unknown, vx, vy, vcr, (vcd/5)*(progress["belt"]-9))
+      setCirclePos(unknown, vx, vy, vcr, ((vcd/5)*(progress["belt"]-9)-(bodies["Ceres"]["instance"]:getRadius()*2)))
       local c = unknown_colours[bc]
       unknown:setRadarTraceColor(c[1], c[2], c[3])
       if ship:hasPlayerAtPosition("Science") then
@@ -2807,7 +2811,7 @@ onNewPlayerShip(
       --ship:addCustomButton("Engineering", "e-yellowBeamButton", "Heat Beam", function() weaponBeamYellow(ship) end)
       --ship:addCustomButton("Science", "s-blueBeamButton", "Locator beam", function() weaponBeamBlue(ship) end)
       --ship:addCustomButton("Operations", "o-blueBeamButton", "Locator beam", function() weaponBeamBlue(ship) end)
-      ship:addCustomButton("Helms", "h-greenBeamButton", "Tracking beam", function() weaponBeamGreen(ship) end)
+      --ship:addCustomButton("Helms", "h-greenBeamButton", "Tracking beam", function() weaponBeamGreen(ship) end)
 
       welcomeComms(ship)
 
