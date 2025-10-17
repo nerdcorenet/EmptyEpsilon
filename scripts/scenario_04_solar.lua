@@ -1001,10 +1001,6 @@ function init()
       CpuShip():setFaction("Human Navy"):setTemplate("Strikeship"):setPosition(dx-1000,dy-2000):orderDefendTarget(d):setScanned(true)
    end
 
-
-   -- FIXME: Jump Carrier
-   -- TODO: JC-1 should handle inner planets,
-   -- JC-2 should appear later in the mission to access the outer planets
    jumpConfig = {
       ["JC-1"] = {
 	 destinations = {
@@ -1015,13 +1011,28 @@ function init()
 	    ["Venus"] = { stations["VE-IX"]["instance"]:getPosition() },
 	    ["Jupiter"] = { stations["HN-CA"]["instance"]:getPosition() },
 	 }
+      },
+      ["JC-2"] = {
+	 destinations = {
+	    ["JU-HQ"] = { stations["JU-HQ"]["instance"]:getPosition() },
+	    ["JU-IO"] = { stations["JU-IO"]["instance"]:getPosition() },
+	    ["JU-EU"] = { stations["JU-EU"]["instance"]:getPosition() },
+	    ["JU-GA"] = { stations["JU-GA"]["instance"]:getPosition() },
+	    ["JU-CA"] = { stations["JU-CA"]["instance"]:getPosition() },
+	    ["HN-CA"] = { stations["HN-CA"]["instance"]:getPosition() },
+	 }
       }
    }
    local hqx, hqy = stations["HN-HQ"]["instance"]:getPosition()
    jc1 = CpuShip():setFaction("Human Navy"):setTemplate("Jump Carrier"):setCallSign("JC-1"):setScanned(true):setPosition(hqx+random(1000,3000), hqy+random(1000,3000)):orderIdle()
-   -- TEST Will it reach HA-CA at Jupiter (Callisto)?
+   -- TEST Will it reach HN-CA at Jupiter (Callisto)?
    jc1:setJumpDriveRange(5000, (distance(bodies["Sol"]["instance"], bodies["Mars"]["instance"]) * 2) + 20000)
    jc1:setCommsFunction(jcComms)
+
+   local cax, cay = stations["HN-CA"]["instance"]:getPosition()
+   jc2 = CpuShip():setFaction("Human Navy"):setTemplate("Jump Carrier"):setCallSign("JC-2"):setScanned(true):setPosition(hqx+random(1000,3000), hqy+random(1000,3000)):orderIdle()
+   jc2:setJumpDriveRange(5000, distance(stations["JU-HQ"]["instance"], stations["JU-CA"]["instance"]))
+   jc2:setCommsFunction(jcComms)
 end
 
 function update(delta)
@@ -2537,11 +2548,11 @@ function advanceFlares()
    if stn ~= nil then
       for i,ship in ipairs(ships) do
 	 if ship:isDocked(stn) then
-	    progress["mercury"] = progress["mercury"] + ((getScenarioTime() - flare_time) / 40000000)
+	    progress["mercury"] = progress["mercury"] + ((getScenarioTime() - flare_time) / 4000000)
 	    table.insert(docked, ship)
 	    local msg = "Download: " .. progress["mercury"] .. " %"
-	    ship:p:hasPlayerAtPosition("Engineering") then ship:addCustomInfo("Engineering","download-progress",msg) end
-	    ship:p:hasPlayerAtPosition("Engineering+") then ship:addCustomInfo("Engineering+","download-progress",msg) end
+	    if ship:hasPlayerAtPosition("Engineering") then ship:addCustomInfo("Engineering","download-progress",msg) end
+	    if ship:hasPlayerAtPosition("Engineering+") then ship:addCustomInfo("Engineering+","download-progress",msg) end
 	 end
       end
       -- FIXME: Should never reach "100%"
