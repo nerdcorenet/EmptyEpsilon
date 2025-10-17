@@ -2537,11 +2537,17 @@ function advanceFlares()
    if stn ~= nil then
       for i,ship in ipairs(ships) do
 	 if ship:isDocked(stn) then
+	    progress["mercury"] = progress["mercury"] + ((getScenarioTime() - flare_time) / 40000000)
 	    table.insert(docked, ship)
+	    local msg = "Download: " .. progress["mercury"] .. " %"
+	    ship:p:hasPlayerAtPosition("Engineering") then ship:addCustomInfo("Engineering","download-progress",msg) end
+	    ship:p:hasPlayerAtPosition("Engineering+") then ship:addCustomInfo("Engineering+","download-progress",msg) end
 	 end
       end
       -- FIXME: Should never reach "100%"
-      if #docked > 0 then progress["mercury"] = progress["mercury"] + ((getScenarioTime() - flare_time) / 4000000) end
+      --if #docked > 0 then
+	 --progress["mercury"] = progress["mercury"] + ((getScenarioTime() - flare_time) / 4000000)
+      --end
       --if #docked > 0 then progress["mercury"] = progress["mercury"] + ((100/dtm)*distance(solar_flares[1],s)) end
    end
    for i,fdata in pairs(solar_flares) do
