@@ -1169,7 +1169,7 @@ function update(delta)
       bodies["Mars"]["atmo_g"] = (math.sin(bodies["Mars"]["atmo_g"] + 0.1)+1)
       bodies["Mars"]["atmo_b"] = (math.sin(bodies["Mars"]["atmo_b"] + (delta/2))+1.1)
 
-      bodies["Mars"]["instance"]:setAtmosphereColor(bodies["Mars"]["atmo_r"], bodies["Mars"]["atmo_g"], bodies["Mars"]["atmo_b"])
+      bodies["Mars"]["instance"]:setPlanetAtmosphereColor(bodies["Mars"]["atmo_r"], bodies["Mars"]["atmo_g"], bodies["Mars"]["atmo_b"])
    end
 
    -- Prepare the final battle
