@@ -2198,7 +2198,7 @@ function beDirs(s,t)
       setCommsMessage("There's nothing for you here, Earthling. Go home.")
       addCommsReply("Back", beComms)
    else
-      setCommsMessage(string.format("Ceres is located in sector [%s], at bearing %d from here", getSectorName(bodies["Ceres"]["instance"]:getPosition()), angleRotation(bodies["Vesta"]["instance"], bodies["Ceres"]["instance"])))
+      setCommsMessage(string.format("Ceres is located in sector [%s], at bearing %f from here", getSectorName(bodies["Ceres"]["instance"]:getPosition()), angleRotation(bodies["Vesta"]["instance"], bodies["Ceres"]["instance"])+90))
       addCommsReply("Back", beComms)
    end
 end
@@ -2258,7 +2258,7 @@ function spriteHit(ship, bc)
       local vx,vy = bodies["Vesta"]["instance"]:getPosition()
       local vcr = angleRotation(bodies["Vesta"]["instance"], bodies["Ceres"]["instance"])
       local vcd = distance(bodies["Vesta"]["instance"], bodies["Ceres"]["instance"])
-      setCirclePos(unknown, vx, vy, vcr, ((vcd/5)*(progress["belt"]-9)-(bodies["Ceres"]["instance"]:getRadius()*2)))
+      setCirclePos(unknown, vx, vy, vcr, ((vcd/5)*(progress["belt"]-9)-(bodies["Ceres"]["radius"]*2)))
       local c = unknown_colours[bc]
       unknown:setRadarTraceColor(c[1], c[2], c[3])
       if ship:hasPlayerAtPosition("Science") then
