@@ -1,5 +1,5 @@
--- Name: Solar System
--- Description: Our Solar System, scaled to fit and look nice.
+-- Name: Solar Tour
+-- Description: Our Solar system, scaled to fit and look nice.
 -- Type: Basic
 -- Author: Mike Mallett <mike@nerdcore.net>
 
@@ -1189,7 +1189,7 @@ function update(delta)
       -- FIXME? HN only makes 100 ships, Kraylor makes infinite...
       if #armada < 100 then
 	 if irandom(1,12) == 1 then k = stations["KR-PL"]["instance"] end
-	 table.insert(armada, CpuShip():setPosition(stations["LS-1"]["instance"]:getPosition()):setWarpDrive(true):setWarpSpeed(4000):setFaction("Human Navy"):setTemplate("Strikeship"):orderAttack(k):setScanned(true))
+	 table.insert(armada, CpuShip():setPosition(stations["LS-1"]["instance"]:getPosition()):setWarpDrive(true):setWarpSpeed(4000):setFaction("Human Navy"):setTemplate("Strikeship"):orderAttack(k):setScanned(true):setWarpSpeed(100000))
       else
 	 armada[irandom(1,#armada)]:orderAttack(k)
       end
@@ -1741,11 +1741,12 @@ end
 function lsCommsLoungeBeltBelt(s,t)
    setCommsMessage("\"We Beltians are proud of our accomplishments in establishing ourselves in the lifeless asteroid belt. It's been hard work and I doubt you Earthlings have the strength for what we do.\"\n\nThe Beltians chuckle a little, in your direction.\n\n\"Still, we invite you to visit our colonies. There's lots of fun to be had.\"")
    addCommsReply("What is your name?", lsCommsLoungeBeltName)
+   addCommsReply("You don't like us?", lsCommsLoungeBeltLike)
    addCommsReply("Back", lsCommsLounge)
 end
 function lsCommsLoungeBeltName(s,t)
    setCommsMessage("The lead Beltian puts his mug of ale down, and stares your captain in the eye for a moment.\n\n\"My name is Bagu. What's yours?\"")
-   addCommsReply("Joey Jo-Jo Jr. Shabadu", lsCommsLoungeBeltNameJoey)
+   --addCommsReply("Joey Jo-Jo Jr. Shabadu", lsCommsLoungeBeltNameJoey)
    addCommsReply("<Remain Silent>", lsCommsLoungeBeltNameSilent)
 end
 function lsCommsLoungeBeltNameJoey(s,t)
@@ -2273,47 +2274,34 @@ function spriteHit(ship, bc)
 	 ship:addCustomMessage("Single","single-sprite","Tee hee! Pretty colours!")
       end
       progress["belt"] = progress["belt"] + 1
-   else
-      unknown:setCallSign("Friendly Sprite")
-      unknown:sendCommsMessage(ship, "I like your pretty beams! Please enjoy this Ceres bounty.")
+   elseif progress["belt"] < 100 then
       progress["belt"] = 100
+      unknown:setCallSign("Friendly Sprite")
+      unknown:sendCommsMessage(ship, "I like your pretty beams! Please enjoy this bounty at Ceres.")
       ship:addToShipLog("Ceres Secrets Discovered!", "Green")
       local c = bodies["Ceres"]["instance"]
       local cx,cy = c:getPosition()
       local cr = c:getPlanetRadius()
-      -- FIXME: This should sprinkle bounty all around Ceres
+      -- TODO: Variety of box meshes
       --local na = Artifact():setModel("ammo_box"):allowPickup(true):onPickUp(function(a,s)
---      na = Artifact()
---      setCirclePos(na, cx, cy, random(0, 360), cr*1.5)
---      na:allowPickup(true):setScanningParameters(1,1):setDescriptions("Big ammo crate","20 Nukes")
---      na:onPickUp(function(na,s) s:setWeaponStorage("Nuke", s:getWeaponStorage("Nuke")+20); s:addToShipLog("Added 20 Nukes!", "Green") end)
---      ea = Artifact():setModel("ammo_box"):allowPickup(true):setScanningParameters(1,1):setDescriptions("Big ammo crate","20 EMPs")
---      ea:onPickUp(function(a,s)
---	    s:setWeaponStorage("EMP", s:getWeaponStorage("EMP")+20)
---	    s:addToShipLog("Added 20 EMPs!", "Green")
---      end)
---      setCirclePos(na, cx, cy, random(0, 360), cr*1.5)
---      local na = Artifact():setModel("ammo_box"):allowPickup(true):onPickUp(function(a,s)
---	    s:setWeaponStorage("Homing", s:getWeaponStorage("Homing")+50)
---	    s:addToShipLog("Added 50 Homing Missiles!", "Green")
---								end)
---      na:setScanningParameters(1,1):setDescriptions("Big ammo crate","50 Homing Missiles")
---      setCirclePos(na, cx, cy, random(0, 360), cr*1.5)
---      local na = Artifact():setModel("ammo_box"):allowPickup(true):onPickUp(function(a,s)
---	    s:setWeaponStorage("Mine", s:getWeaponStorage("Mine")+20)
---	    s:addToShipLog("Added 20 Mines!", "Green")
---								end)
---      na:setScanningParameters(1,1):setDescriptions("Big ammo crate","20 Mines")
---      setCirclePos(na, cx, cy, random(0, 360), cr*1.5)
---      local na = Artifact():setModel("ammo_box"):allowPickup(true):onPickUp(function(a,s)
---	    s:setWeaponStorage("HVLI", s:getWeaponStorage("HVLI")+100)
---	    s:addToShipLog("Added 100 HVLI!", "Green")
---								end)
---      na:setScanningParameters(1,1):setDescriptions("Big ammo crate","100 HVLI")
---      setCirclePos(na, cx, cy, random(0, 360), cr*1.5)
+      na = Artifact():setModel("ammo_box"):allowPickup(true):setScanningParameters(1,1):setDescriptions("Big ammo crate","20 Nukes"):onPickUp(function(a,s) math.abs(0); s:setWeaponStorage("Nuke", s:getWeaponStorage("Nuke")+20); s:addToShipLog("Added 20 Nukes!", "Green") end)
+      setCirclePos(na, cx, cy, random(0, 360), cr*math.random(14, 20)/10)
+      pa = Artifact():setModel("ammo_box"):allowPickup(true):setScanningParameters(1,1):setDescriptions("Big ammo crate","20 EMPs"):onPickUp(function(a,s) math.abs(0); s:setWeaponStorage("EMP", s:getWeaponStorage("EMP")+20); s:addToShipLog("Added 20 EMPs!", "Green") end)
+      setCirclePos(pa, cx, cy, random(0, 360), cr*math.random(14, 20)/10)
+      oa = Artifact():setModel("ammo_box"):allowPickup(true):setScanningParameters(1,1):setDescriptions("Big ammo crate","50 Homing Missiles"):onPickUp(function(a,s) math.abs(0); s:setWeaponStorage("Homing", s:getWeaponStorage("Homing")+50); s:addToShipLog("Added 50 Homing Missiles!", "Green") end)
+      setCirclePos(oa, cx, cy, random(0, 360), cr*math.random(14, 20)/10)
+      ma = Artifact():setModel("ammo_box"):allowPickup(true):setScanningParameters(1,1):setDescriptions("Big ammo crate","20 Mines"):onPickUp(function(a,s) math.abs(0); s:setWeaponStorage("Mine", s:getWeaponStorage("Mine")+20) s:addToShipLog("Added 20 Mines!", "Green") end)
+      setCirclePos(ma, cx, cy, random(0, 360), cr*math.random(14, 20)/10)
+      ha = Artifact():setModel("ammo_box"):allowPickup(true):setScanningParameters(1,1):setDescriptions("Big ammo crate","100 HVLI"):onPickUp(function(a,s) math.abs(0); s:setWeaponStorage("HVLI", s:getWeaponStorage("HVLI")+100); s:addToShipLog("Added 100 HVLI!", "Green") end)
+      setCirclePos(ha, cx, cy, random(0, 360), cr*math.random(14, 20)/10)
+      ea = Artifact():setModel("ammo_box"):allowPickup(true):setScanningParameters(1,1):setDescriptions("Energy booster","Energy Boost"):onPickUp(function(a,s) math.abs(0); s:setMaxEnergy(s:getMaxEnergy()*2); s:setEnergy(s:getMaxEnergy()); s:addToShipLog("Energy boosted!", "Yellow") end)
+      setCirclePos(ea, cx, cy, random(0, 360), cr*math.random(14, 20)/10)
+      ca = Artifact():setModel("ammo_box"):allowPickup(true):setScanningParameters(1,1):setDescriptions("Coolant","Coolant"):onPickUp(function(a,s) math.abs(0); s:setMaxCoolant(s:getMaxCoolant()*4); s:addToShipLog("Coolant boosted!", "Cyan") end)
+      setCirclePos(ca, cx, cy, random(0, 360), cr*math.random(14, 20)/10)
+      sa = Artifact():setModel("ammo_box"):allowPickup(true):setScanningParameters(1,1):setDescriptions("Scan probes","Probes"):onPickUp(function(a,s) math.abs(0); s:setMaxScanProbeCount(s:getMaxScanProbeCount()*10); s:setScanProbeCount(s:getMaxScanProbeCount()); s:addToShipLog("More probes!", "White") end)
+      setCirclePos(sa, cx, cy, random(0, 360), cr*math.random(14, 20)/10)
 
-
-      -- HACK because the stuff above doesn't work :(
+      -- Another way: supply drops
       -- Explane from 08_atlantis
       -- supply_drop = SupplyDrop():setFaction("Human Navy"):setPosition(29021, 114945):setEnergy(500):setWeaponStorage("Homing", 12):setWeaponStorage("Nuke", 4):setWeaponStorage("Mine", 8):setWeaponStorage("EMP", 6):setWeaponStorage("HVLI", 20)
 
@@ -2330,22 +2318,22 @@ function spriteHit(ship, bc)
 --      bounty_e = SupplyDrop():setEnergy(1000):setFaction("Human Navy")
 --      setCirclePos(bounty_e, cx, cy, random(0, 360), cr*1.5)
 
-      -- Because other stuff doesn't work
-      ship:setWeaponStorageMax("Nuke",20)
-      ship:setWeaponStorage("Nuke",20)
-      ship:setWeaponStorageMax("EMP",20)
-      ship:setWeaponStorage("EMP",20)
-      ship:setWeaponStorageMax("Homing",50)
-      ship:setWeaponStorage("Homing",50)
-      ship:setWeaponStorageMax("Mine",20)
-      ship:setWeaponStorage("Mine",20)
-      ship:setWeaponStorageMax("HVLI",100)
-      ship:setWeaponStorage("HVLI",100)
-      ship:setMaxEnergy(ship:getMaxEnergy()*4)
-      ship:setEnergy(ship:getMaxEnergy())
-      ship:setMaxCoolant(ship:getMaxCoolant()*4)
-      ship:setMaxScanProbeCount(ship:getMaxScanProbeCount()*4)
-      ship:setScanProbeCount(ship:getMaxScanProbeCount())
+      -- Another way: given directly now
+--      ship:setWeaponStorageMax("Nuke",20)
+--      ship:setWeaponStorage("Nuke",20)
+--      ship:setWeaponStorageMax("EMP",20)
+--      ship:setWeaponStorage("EMP",20)
+--      ship:setWeaponStorageMax("Homing",50)
+--      ship:setWeaponStorage("Homing",50)
+--      ship:setWeaponStorageMax("Mine",20)
+--      ship:setWeaponStorage("Mine",20)
+--      ship:setWeaponStorageMax("HVLI",100)
+--      ship:setWeaponStorage("HVLI",100)
+--      ship:setMaxEnergy(ship:getMaxEnergy()*4)
+--      ship:setEnergy(ship:getMaxEnergy())
+--      ship:setMaxCoolant(ship:getMaxCoolant()*4)
+--      ship:setMaxScanProbeCount(ship:getMaxScanProbeCount()*4)
+--      ship:setScanProbeCount(ship:getMaxScanProbeCount())
    end
 end
 
@@ -2862,8 +2850,8 @@ onNewPlayerShip(
       --progress["mercury"] = 200
       --progress["venus"] = 100
       --ghost_stns = {}
-      --progress["mars"] = 202
-      --progress["belt"] = 100
+      --progress["mars"] = 200
+      --progress["belt"] = 1
       --progress["juVisits"] = {"JU-HQ","JU-IO","JU-EU","JU-GA","JU-CA"}
       --progress["saturn"] = 1000
       --progress["outer"] = 1
@@ -2873,7 +2861,7 @@ onNewPlayerShip(
       --ship:addCustomButton("Weapons", "w-BeamButton", "Destruct beam", function() weaponBeamOrange(ship) end)
       --ship:addCustomButton("Engineering", "e-yellowBeamButton", "Heat Beam", function() weaponBeamYellow(ship) end)
       --ship:addCustomButton("Science", "s-blueBeamButton", "Homing beam", function() weaponBeamBlue(ship) end)
-      --ship:addCustomButton("Operations", "o-blueBeamButton", "Locator beam", function() weaponBeamBlue(ship) end)
+      --ship:addCustomButton("Operations", "o-blueBeamButton", "Homing beam", function() weaponBeamBlue(ship) end)
       --ship:addCustomButton("Relay", "r-purpleBeamButton", "Strange beam", function() weaponBeamPurple(ship) end)
 
       welcomeComms(ship)
