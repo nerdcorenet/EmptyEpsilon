@@ -616,7 +616,8 @@ function init()
    flare_time = 0
 
    progress = {
-      ["whAllow"] = true, -- FOR TESTING
+      --["whAllow"] = true, -- FOR TESTING
+      ["whAllow"] = false,
       ["mercury"] = 0,
       ["venus"] = 0,
       ["mars"] = 0,
@@ -838,14 +839,6 @@ function init()
 	 speed = 0.00001,
 	 instance = nil
       },
-      ["HN-CA"] = {
-	 template = "Medium Station",
-	 faction = "Human Navy",
-	 parent = "Callisto",
-	 distance = 1.6,
-	 speed = 0.0001,
-	 instance = nil
-      },
       ["JU-EU"] = {
 	 template = "Small Station",
 	 faction = "Independent",
@@ -992,7 +985,7 @@ function init()
    unfact = Artifact():allowPickup(false):setScanningParameters(1,1):setDescriptions("What's that?","Kraylor! HERE!? Better tell HQ about this!"):setPosition(nx+nr+7000,ny):setRadarTraceColor(255, 0, 0):setCallSign("Beacon")
 
    -- TODO: Make this better, somehow...
-   local ds = {"HN-HQ", "HN-WH", "HN-RM", "LS-1", "VE-IX", "HN-CA"}
+   local ds = {"HN-HQ", "HN-WH", "HN-RM", "LS-1", "VE-IX"}
    for i,dn in ipairs(ds) do
       local d = stations[dn]["instance"]
       local dx,dy = d:getPosition()
@@ -1010,7 +1003,7 @@ function init()
 	    ["Lunar Station One [LS-1]"] = { stations["LS-1"]["instance"]:getPosition() },
 	    ["Mercury"] =  { stations["Daedalus"]["instance"]:getPosition() },
 	    ["Venus"] = { stations["VE-IX"]["instance"]:getPosition() },
-	    ["Jupiter"] = { stations["HN-CA"]["instance"]:getPosition() },
+	    ["Jupiter"] = { stations["JU-CA"]["instance"]:getPosition() },
 	 }
       },
       ["JC-2"] = {
@@ -1020,18 +1013,16 @@ function init()
 	    ["JU-EU @ Europa"] = { stations["JU-EU"]["instance"]:getPosition() },
 	    ["JU-GA @ Ganymede"] = { stations["JU-GA"]["instance"]:getPosition() },
 	    ["JU-CA @ Callisto"] = { stations["JU-CA"]["instance"]:getPosition() },
-	    ["HN-CA @ Callisto"] = { stations["HN-CA"]["instance"]:getPosition() },
 	 }
       }
    }
    local hqx, hqy = stations["HN-HQ"]["instance"]:getPosition()
    jc1 = CpuShip():setFaction("Human Navy"):setTemplate("Jump Carrier"):setCallSign("JC-1"):setScanned(true):setPosition(hqx+random(1000,3000), hqy+random(1000,3000)):orderIdle()
-   -- TEST Will it reach HN-CA at Jupiter (Callisto)?
    jc1:setJumpDriveRange(5000, (distance(bodies["Sol"]["instance"], bodies["Mars"]["instance"]) * 2) + 20000)
    jc1:setCommsFunction(jcComms)
 
-   local cax, cay = stations["HN-CA"]["instance"]:getPosition()
-   jc2 = CpuShip():setFaction("Human Navy"):setTemplate("Jump Carrier"):setCallSign("JC-2"):setScanned(true):setPosition(hqx+random(1000,3000), hqy+random(1000,3000)):orderIdle()
+   local cax, cay = stations["JU-CA"]["instance"]:getPosition()
+   jc2 = CpuShip():setFaction("Human Navy"):setTemplate("Jump Carrier"):setCallSign("JC-2"):setScanned(true):setPosition(cax+random(1000,3000), cay+random(1000,3000)):orderIdle()
    jc2:setJumpDriveRange(5000, distance(stations["JU-HQ"]["instance"], stations["JU-CA"]["instance"]))
    jc2:setCommsFunction(jcComms)
 end
@@ -1416,10 +1407,15 @@ function askForDirPlanet(s,t)
    for name,config in pairs(bodies) do
       if name ~= "Corona" then -- Hide it
 	 addCommsReply(name, function()
-			  if config["parent"] ~= "Sol" then
+			  if config["parent"] == nil then
+			     setCommsMessage(name .. " is currently located in sector " .. getSectorName(config["instance"]:getPosition()))
+			     addCommsReply("Back", askForDirections)
+			  elseif config["parent"] ~= "Sol" then
 			     setCommsMessage(name .. " is orbiting planet " .. config["parent"] .. ". It is currently located in sector " .. getSectorName(config["instance"]:getPosition()))
+			     addCommsReply("Back", askForDirections)
 			  else
 			     setCommsMessage(name .. " is currently located in sector " .. getSectorName(config["instance"]:getPosition()))
+			     addCommsReply("Back", askForDirections)
 			  end
 	 end)
       end
@@ -1434,6 +1430,7 @@ function askForDirStation(s,t)
 	 addCommsReply(name, function()
 			  local sx, sy = config["instance"]:getPosition()
 			  setCommsMessage("Human Navy station " .. name .. " is currently located in sector " .. getSectorName(config["instance"]:getPosition()))
+			  addCommsReply("Back", askForDirections)
 	 end)
       elseif f == "Independent" then
 	 addCommsReply(name, function()
@@ -1442,6 +1439,7 @@ function askForDirStation(s,t)
 			  sx = random(sx-30000, sx+30000)
 			  sy = random(sy-30000, sy+30000)
 			  setCommsMessage("Our long range radar suggests you might find the " .. config["faction"] .. " station " .. name .. " at approximately sector " .. getSectorName(sx, sy) .. ".\n\nHowever, please note that because this is not a Human Navy station our records may be a bit off.")
+			  addCommsReply("Back", askForDirections)
 	 end)
       end
    end
@@ -1689,10 +1687,11 @@ end
 function lsCommsLounge(s,t)
    msg = "A colourful variety of ships' crews are enjoying the relaxed atmosphere of the lounge.\n\nYou see a fellow Human Navy crew."
    -- FIXME: When should these appear? Make sure they become possible
+   -- Early, so the bonus can be obtained and used.
    if (progress["mercury"] > 0) and
-      (progress["venus"] > 0) and
-      (progress["mars"] > 0) and
-      (#progress["juVisits"] > 0) and
+      --(progress["venus"] > 0) and
+      --(progress["mars"] > 0) and
+      --(#progress["juVisits"] > 0) and
       (progress["belt"] <= 1) then
       msg = msg .. "\nYou see some Beltians."
    end
@@ -1703,9 +1702,9 @@ function lsCommsLounge(s,t)
    setCommsMessage(msg)
    addCommsReply("Buy the HN crew a drink", lsCommsLoungeHN)
    if (progress["mercury"] > 0) and
-      (progress["venus"] > 0) and
-      (progress["mars"] > 0) and
-      (#progress["juVisits"] > 0) and
+      --(progress["venus"] > 0) and
+      --(progress["mars"] > 0) and
+      --(#progress["juVisits"] > 0) and
       (progress["belt"] <= 1) then
       addCommsReply("Approach the Beltians", lsCommsLoungeBelt)
    end
@@ -1855,8 +1854,12 @@ end
 function moCommsSearch(s,t)
    progress["mars"] = 2
    local bi = 0
+   local bcs = {}
+   for bc in pairs(barc_colours) do
+      table.insert(bcs,bc)
+   end
    repeat
-      local values = barc_colours[irandom(1,#barc_colours)]
+      local values = barc_colours[bcs[math.random(#bcs)]]
       s:setBeamWeaponArcColor(bi, values[1],  values[2],  values[3],  values[4],  values[5], values[6])
       bi = bi+1
    until(s:getBeamWeaponRange(bi) < 1)
@@ -2370,13 +2373,13 @@ function juComms(s,t)
 	    addCommsReply("Sure, we can do that!", juAck)
 	    --addCommsReply("Sorry, not right now.", juComms)
 	 elseif (#progress["juVisits"] == 1) then
-	    setCommsMessage("Thanks for delivering these messages for us! Here's a few more to deliver.")
+	    setCommsMessage("Messages delivered.")
 	    addCommsReply("Collect messages.", juAck)
 	 elseif (#progress["juVisits"] == 2) then
-	    setCommsMessage("Wow, you've already picked up the messages from two other stations, thank you so much!\n\nHere's a few more messages.")
-	    addCommsReply("Collect messages.", juAck)
+	    setCommsMessage("Messages delivered...")
+	    addCommsReply("Collect messages...", juAck)
 	 elseif (#progress["juVisits"] == 3) then
-	    setCommsMessage("You've been a huge help to the Union! We just need these last messages delivered, which should allow the restarting of our comms network.")
+	    setCommsMessage("You've been a huge help to the Jupiter Union! We just need these last messages delivered, which should allow the restarting of our comms network.")
 	    addCommsReply("Okay, last trip.", juAck)
 	 elseif (#progress["juVisits"] == 4) then
 	    setCommsMessage("Thanks for delivering all our backlogged emails. We should have the comms network back shortly.\n\nShipyard Lunar Station One [LS-1] has new upgrades available.")
@@ -2385,6 +2388,7 @@ function juComms(s,t)
       end
    end
    addCommsReply("Ask for directions.", juDirections)
+   addCommsReply("Ask for jump carrier.", juJumper)
 end
 function juAck(s,t)
    local n = #progress["juVisits"]
@@ -2393,19 +2397,13 @@ function juAck(s,t)
    --   setCommsMessage("Hello again.")
    --end
    if n == 0 then
-      setCommsMessage("Okay, we need you to collect and to deliver messages at each of the Jupiter Union stations.\n\nThey are at Callisto, Ganymede, Io, Europa, and Jupiter itself.")
+      setCommsMessage("Our comms are down. Please visit each Jupiter Union station to deliver messages.\n\nThey are at Callisto, Ganymede, Io, Europa, and Jupiter itself.")
       s:addToShipLog("Collected messages from " .. stnName, "Yellow")
-   elseif n == 1 then
-      setCommsMessage("Delivered messages to two stations.")
+   elseif n < 5 then
+      setCommsMessage("Here's some more messages to deliver.")
       s:addToShipLog("Collected messages from " .. stnName, "Yellow")
-   elseif n == 2 then
-      setCommsMessage("Delivered messages to three stations.")
-      s:addToShipLog("Collected messages from " .. stnName, "Yellow")
-   elseif n == 3 then
-      setCommsMessage("Delivered messages to four stations.")
-      s:addToShipLog("Collected messages from " .. stnName, "Yellow")
-   elseif n == 4 then
-      setCommsMessage("Delivered messages to all five stations!")
+   elseif n == 5 then
+      setCommsMessage("Delivered messages all five stations!")
       --s:addToShipLog("Collected messages from " .. stnName, "Yellow")
       s:addReputationPoints(100)
    end
@@ -2430,6 +2428,17 @@ function juDirections(s,t)
    end
    setCommsMessage("Jupiter Union stations orbit the four Gallilean moons and Jupiter itself.\n\n" .. where)
    addCommsReply("Back", juComms)
+end
+function juJumper(s,t)
+   if jc2 ~= nil and jc2:isValid() then
+      setCommsMessage("JC-2 is arriving now...")
+      addCommsReply("Thanks!", juComms)
+      local sx,sy = s:getPosition()
+      jc2:setPosition(sx+4500,sy+4500)
+   else
+      setCommsMessage("No dice! JC-2 is ded.")
+      addCommsReply("Uh-Oh!", juComms)
+   end
 end
 
 -- TODO: Saturn mission is to destroy, make peace, or convert the Exuari.
@@ -2854,6 +2863,7 @@ onNewPlayerShip(
       --progress["mercury"] = 200
       --progress["venus"] = 100
       --ghost_stns = {}
+      --progress["mars"] = 1
       --progress["mars"] = 200
       --progress["belt"] = 1
       --progress["juVisits"] = {"JU-HQ","JU-IO","JU-EU","JU-GA","JU-CA"}
