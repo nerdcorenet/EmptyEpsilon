@@ -992,7 +992,7 @@ function init()
    unfact = Artifact():allowPickup(false):setScanningParameters(1,1):setDescriptions("What's that?","Kraylor! HERE!? Better tell HQ about this!"):setPosition(nx+nr+7000,ny):setRadarTraceColor(255, 0, 0):setCallSign("Beacon")
 
    -- TODO: Make this better, somehow...
-   local ds = {"HN-HQ", "HN-WH", "LS-1", "VE-IX", "HN-CA"}
+   local ds = {"HN-HQ", "HN-WH", "HN-RM", "LS-1", "VE-IX", "HN-CA"}
    for i,dn in ipairs(ds) do
       local d = stations[dn]["instance"]
       local dx,dy = d:getPosition()
@@ -1004,9 +1004,10 @@ function init()
    jumpConfig = {
       ["JC-1"] = {
 	 destinations = {
-	    ["Home"] = { stations["HN-HQ"]["instance"]:getPosition() },  -- NOTE: The first jump needs to start near the first listed destination
-	    ["Human Navy Worm Hole"] = { stations["HN-WH"]["instance"]:getPosition() },
-	    ["Lunar Station One"] = { stations["LS-1"]["instance"]:getPosition() },
+	    ["Human Navy HQ [HN-HQ]"] = { stations["HN-HQ"]["instance"]:getPosition() },  -- NOTE: The first jump needs to start near the first listed destination
+	    ["Human Navy Worm Hole [HN-WH]"] = { stations["HN-WH"]["instance"]:getPosition() },
+	    ["Human Navy Armory [HN-RM]"] = { stations["HN-RM"]["instance"]:getPosition() },
+	    ["Lunar Station One [LS-1]"] = { stations["LS-1"]["instance"]:getPosition() },
 	    ["Mercury"] =  { stations["Daedalus"]["instance"]:getPosition() },
 	    ["Venus"] = { stations["VE-IX"]["instance"]:getPosition() },
 	    ["Jupiter"] = { stations["HN-CA"]["instance"]:getPosition() },
@@ -1014,12 +1015,12 @@ function init()
       },
       ["JC-2"] = {
 	 destinations = {
-	    ["JU-HQ"] = { stations["JU-HQ"]["instance"]:getPosition() },
-	    ["JU-IO"] = { stations["JU-IO"]["instance"]:getPosition() },
-	    ["JU-EU"] = { stations["JU-EU"]["instance"]:getPosition() },
-	    ["JU-GA"] = { stations["JU-GA"]["instance"]:getPosition() },
-	    ["JU-CA"] = { stations["JU-CA"]["instance"]:getPosition() },
-	    ["HN-CA"] = { stations["HN-CA"]["instance"]:getPosition() },
+	    ["JU-HQ @ Jupiter"] = { stations["JU-HQ"]["instance"]:getPosition() },
+	    ["JU-IO @ Io"] = { stations["JU-IO"]["instance"]:getPosition() },
+	    ["JU-EU @ Europa"] = { stations["JU-EU"]["instance"]:getPosition() },
+	    ["JU-GA @ Ganymede"] = { stations["JU-GA"]["instance"]:getPosition() },
+	    ["JU-CA @ Callisto"] = { stations["JU-CA"]["instance"]:getPosition() },
+	    ["HN-CA @ Callisto"] = { stations["HN-CA"]["instance"]:getPosition() },
 	 }
       }
    }
@@ -1165,9 +1166,9 @@ function update(delta)
    if (progress["mars"] == 202) then
       -- Normalize sine waves to range(0,1)
       -- Cycle all rainbow by advancing these at separate rates
-      bodies["Mars"]["atmo_r"] = (math.sin(bodies["Mars"]["atmo_r"] + delta)+1)
-      bodies["Mars"]["atmo_g"] = (math.sin(bodies["Mars"]["atmo_g"] + 0.1)+1)
-      bodies["Mars"]["atmo_b"] = (math.sin(bodies["Mars"]["atmo_b"] + (delta/2))+1.1)
+      bodies["Mars"]["atmo_r"] = math.sin(bodies["Mars"]["atmo_r"] + getScenarioTime())
+      bodies["Mars"]["atmo_g"] = math.sin(bodies["Mars"]["atmo_g"] + (getScenarioTime()/5))
+      bodies["Mars"]["atmo_b"] = math.sin(bodies["Mars"]["atmo_b"] + (getScenarioTime()/3))
 
       bodies["Mars"]["instance"]:setPlanetAtmosphereColor(bodies["Mars"]["atmo_r"], bodies["Mars"]["atmo_g"], bodies["Mars"]["atmo_b"])
    end
@@ -1830,7 +1831,7 @@ function lsCommsLoungeWorkersMoss(s,t)
 end
 function lsCommsLoungeWorkersMossKey(s,t)
    progress["mars"] = 1
-   setCommsMessage("\"Here ya go. Just sweep all that crap out the airlock. Thanks again.\"")
+   setCommsMessage("\"Here ya go. Just sweep all that crap out the airlock. Thanks again!\"")
    addCommsReply("Back", lsCommsLounge)
 end
 
@@ -2251,14 +2252,14 @@ function spriteHit(ship, bc)
       if bc == "blue" then       logc = "Cyan"
       elseif bc == "yellow" then logc = "Yellow"
       elseif bc == "orange" then logc = "#ff8000"
-      elseif bc == "purple" then logc = "Magenta"
+      elseif bc == "purple" then logc = "White"   -- "Magenta" came out blackish
       elseif bc == "green" then	 logc = "Green"
       end
       ship:addToShipLog("Tee hee! That tickles!", logc)
       local vx,vy = bodies["Vesta"]["instance"]:getPosition()
       local vcr = angleRotation(bodies["Vesta"]["instance"], bodies["Ceres"]["instance"])
       local vcd = distance(bodies["Vesta"]["instance"], bodies["Ceres"]["instance"])
-      setCirclePos(unknown, vx, vy, vcr, ((vcd/5)*(progress["belt"]-9)-(bodies["Ceres"]["radius"]*2)))
+      setCirclePos(unknown, vx, vy, vcr, ((vcd/5)*(progress["belt"]-9)-(bodies["Ceres"]["instance"]:getPlanetRadius()*2)))
       local c = unknown_colours[bc]
       unknown:setRadarTraceColor(c[1], c[2], c[3])
       if ship:hasPlayerAtPosition("Science") then
@@ -2273,41 +2274,76 @@ function spriteHit(ship, bc)
       progress["belt"] = progress["belt"] + 1
    else
       unknown:setCallSign("Friendly Sprite")
-      unknown:sendCommsMessage(ship, "I like your pretty beams! Please enjoy this bounty at Ceres.")
+      unknown:sendCommsMessage(ship, "I like your pretty beams! Please enjoy this Ceres bounty.")
       ship:addToShipLog("Ceres Secrets Discovered!", "Green")
       local c = bodies["Ceres"]["instance"]
       local cx,cy = c:getPosition()
       local cr = c:getPlanetRadius()
-      local na = Artifact():setModel("ammo_box"):allowPickup(true):onPickUp(function(a,s)
-	    s:setWeaponStorage("Nuke", s:getWeaponStorage("Nuke")+20)
-	    s:addToShipLog("Added 20 Nukes!", "Green")
-									   end)
-      na:setScanningParameters(1,1):setDescriptions("Big ammo crate","20 Nukes")
-      setCirclePos(na, cx, cy, random(0, 360), cr*1.5)
-      local na = Artifact():setModel("ammo_box"):allowPickup(true):onPickUp(function(a,s)
-	    s:setWeaponStorage("EMP", s:getWeaponStorage("EMP")+20)
-	    s:addToShipLog("Added 20 EMPs!", "Green")
-								end)
-      na:setScanningParameters(1,1):setDescriptions("Big ammo crate","20 EMPs")
-      setCirclePos(na, cx, cy, random(0, 360), cr*1.5)
-      local na = Artifact():setModel("ammo_box"):allowPickup(true):onPickUp(function(a,s)
-	    s:setWeaponStorage("Homing", s:getWeaponStorage("Homing")+50)
-	    s:addToShipLog("Added 50 Homing Missiles!", "Green")
-								end)
-      na:setScanningParameters(1,1):setDescriptions("Big ammo crate","50 Homing Missiles")
-      setCirclePos(na, cx, cy, random(0, 360), cr*1.5)
-      local na = Artifact():setModel("ammo_box"):allowPickup(true):onPickUp(function(a,s)
-	    s:setWeaponStorage("Mine", s:getWeaponStorage("Mine")+20)
-	    s:addToShipLog("Added 20 Mines!", "Green")
-								end)
-      na:setScanningParameters(1,1):setDescriptions("Big ammo crate","20 Mines")
-      setCirclePos(na, cx, cy, random(0, 360), cr*1.5)
-      local na = Artifact():setModel("ammo_box"):allowPickup(true):onPickUp(function(a,s)
-	    s:setWeaponStorage("HVLI", s:getWeaponStorage("HVLI")+100)
-	    s:addToShipLog("Added 100 HVLI!", "Green")
-								end)
-      na:setScanningParameters(1,1):setDescriptions("Big ammo crate","100 HVLI")
-      setCirclePos(na, cx, cy, random(0, 360), cr*1.5)
+      -- FIXME: This should sprinkle bounty all around Ceres
+      --local na = Artifact():setModel("ammo_box"):allowPickup(true):onPickUp(function(a,s)
+--      na = Artifact()
+--      setCirclePos(na, cx, cy, random(0, 360), cr*1.5)
+--      na:allowPickup(true):setScanningParameters(1,1):setDescriptions("Big ammo crate","20 Nukes")
+--      na:onPickUp(function(na,s) s:setWeaponStorage("Nuke", s:getWeaponStorage("Nuke")+20); s:addToShipLog("Added 20 Nukes!", "Green") end)
+--      ea = Artifact():setModel("ammo_box"):allowPickup(true):setScanningParameters(1,1):setDescriptions("Big ammo crate","20 EMPs")
+--      ea:onPickUp(function(a,s)
+--	    s:setWeaponStorage("EMP", s:getWeaponStorage("EMP")+20)
+--	    s:addToShipLog("Added 20 EMPs!", "Green")
+--      end)
+--      setCirclePos(na, cx, cy, random(0, 360), cr*1.5)
+--      local na = Artifact():setModel("ammo_box"):allowPickup(true):onPickUp(function(a,s)
+--	    s:setWeaponStorage("Homing", s:getWeaponStorage("Homing")+50)
+--	    s:addToShipLog("Added 50 Homing Missiles!", "Green")
+--								end)
+--      na:setScanningParameters(1,1):setDescriptions("Big ammo crate","50 Homing Missiles")
+--      setCirclePos(na, cx, cy, random(0, 360), cr*1.5)
+--      local na = Artifact():setModel("ammo_box"):allowPickup(true):onPickUp(function(a,s)
+--	    s:setWeaponStorage("Mine", s:getWeaponStorage("Mine")+20)
+--	    s:addToShipLog("Added 20 Mines!", "Green")
+--								end)
+--      na:setScanningParameters(1,1):setDescriptions("Big ammo crate","20 Mines")
+--      setCirclePos(na, cx, cy, random(0, 360), cr*1.5)
+--      local na = Artifact():setModel("ammo_box"):allowPickup(true):onPickUp(function(a,s)
+--	    s:setWeaponStorage("HVLI", s:getWeaponStorage("HVLI")+100)
+--	    s:addToShipLog("Added 100 HVLI!", "Green")
+--								end)
+--      na:setScanningParameters(1,1):setDescriptions("Big ammo crate","100 HVLI")
+--      setCirclePos(na, cx, cy, random(0, 360), cr*1.5)
+
+
+      -- HACK because the stuff above doesn't work :(
+      -- Explane from 08_atlantis
+      -- supply_drop = SupplyDrop():setFaction("Human Navy"):setPosition(29021, 114945):setEnergy(500):setWeaponStorage("Homing", 12):setWeaponStorage("Nuke", 4):setWeaponStorage("Mine", 8):setWeaponStorage("EMP", 6):setWeaponStorage("HVLI", 20)
+
+--      bounty_n = SupplyDrop():setWeaponStorage("Nuke", 20):setFaction("Human Navy")
+--      setCirclePos(bounty_n, cx, cy, random(0, 360), cr*1.5)
+--      bounty_p = SupplyDrop():setWeaponStorage("EMP", 20):setFaction("Human Navy")
+--      setCirclePos(bounty_p, cx, cy, random(0, 360), cr*1.5)
+--      bounty_o = SupplyDrop():setWeaponStorage("Homing", 50):setFaction("Human Navy")
+--      setCirclePos(bounty_o, cx, cy, random(0, 360), cr*1.5)
+--      bounty_m = SupplyDrop():setWeaponStorage("Mine", 20):setFaction("Human Navy")
+--      setCirclePos(bounty_m, cx, cy, random(0, 360), cr*1.5)
+--      bounty_h = SupplyDrop():setWeaponStorage("HVLI", 100):setFaction("Human Navy")
+--      setCirclePos(bounty_h, cx, cy, random(0, 360), cr*1.5)
+--      bounty_e = SupplyDrop():setEnergy(1000):setFaction("Human Navy")
+--      setCirclePos(bounty_e, cx, cy, random(0, 360), cr*1.5)
+
+      -- Because other stuff doesn't work
+      ship:setWeaponStorageMax("Nuke",20)
+      ship:setWeaponStorage("Nuke",20)
+      ship:setWeaponStorageMax("EMP",20)
+      ship:setWeaponStorage("EMP",20)
+      ship:setWeaponStorageMax("Homing",50)
+      ship:setWeaponStorage("Homing",50)
+      ship:setWeaponStorageMax("Mine",20)
+      ship:setWeaponStorage("Mine",20)
+      ship:setWeaponStorageMax("HVLI",100)
+      ship:setWeaponStorage("HVLI",100)
+      ship:setMaxEnergy(ship:getMaxEnergy()*4)
+      ship:setEnergy(ship:getMaxEnergy())
+      ship:setMaxCoolant(ship:getMaxCoolant()*4)
+      ship:setMaxScanProbeCount(ship:getMaxScanProbeCount()*4)
+      ship:setScanProbeCount(ship:getMaxScanProbeCount())
    end
 end
 
@@ -2704,7 +2740,7 @@ function progressReport(s,t)
    end
 
    -- BELT
-   if (progress["belt"] > 0) and (checkTotalProgress >= 4) then
+   if (progress["belt"] > 0) and (checkTotalProgress() >= 4) then
       msg=msg.."\nBelt: "
       if progress["belt"] < 100 then
 	 msg=msg.."Explore the Belt."
@@ -2766,10 +2802,10 @@ onNewPlayerShip(
       --ship:setPosition(bodies["Callisto"]["instance"]:getPosition())
       --print(startx .. "\n" .. starty)
       -- PLANET
-      --local start = bodies["Pluto"]["instance"]
+      --local start = bodies["Mars"]["instance"]
       --local startoffset = start:getPlanetRadius()
       -- STATION
-      local start = stations["LS-1"]["instance"]
+      local start = stations["HN-HQ"]["instance"]
       local startoffset=100
 
       local startx, starty = start:getPosition()
@@ -2825,10 +2861,12 @@ onNewPlayerShip(
       --progress["outer"] = 1
 
       -- DEBUG Special Beams needed to test other missions
-      --ship:addCustomButton("Engineering", "e-yellowBeamButton", "Heat Beam", function() weaponBeamYellow(ship) end)
-      --ship:addCustomButton("Science", "s-blueBeamButton", "Locator beam", function() weaponBeamBlue(ship) end)
-      --ship:addCustomButton("Operations", "o-blueBeamButton", "Locator beam", function() weaponBeamBlue(ship) end)
       --ship:addCustomButton("Helms", "h-greenBeamButton", "Tracking beam", function() weaponBeamGreen(ship) end)
+      --ship:addCustomButton("Weapons", "w-BeamButton", "Destruct beam", function() weaponBeamOrange(ship) end)
+      --ship:addCustomButton("Engineering", "e-yellowBeamButton", "Heat Beam", function() weaponBeamYellow(ship) end)
+      --ship:addCustomButton("Science", "s-blueBeamButton", "Homing beam", function() weaponBeamBlue(ship) end)
+      --ship:addCustomButton("Operations", "o-blueBeamButton", "Locator beam", function() weaponBeamBlue(ship) end)
+      --ship:addCustomButton("Relay", "r-purpleBeamButton", "Strange beam", function() weaponBeamPurple(ship) end)
 
       welcomeComms(ship)
 
