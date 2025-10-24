@@ -1288,17 +1288,15 @@ function hqComms(s, t)
 end
 function askForHelp(s,t)
    msg = "Well, let's see here...\n"
-   if progress["mercury"] == 0 then  msg = msg.."\nOur solar observation facilities at Mercury could use a hand." end
-   if progress["venus"] == 0 then    msg = msg.."\nTourism is down at Venus." end
-   if progress["mars"] == 0 then     msg = msg.."\nThe Mars terraforming mission needs some heat." end
-   if (checkTotalProgress() > 2) or (#progress["juVisits"]>0) then msg = msg.."\nComms are down at Jupiter." end
-   if checkTotalProgress() > 3 then msg = msg.."\nPeace talks with the Exuari of Saturn have broken down." end
-   if checkTotalProgress() > 4 then
-      msg = msg.."\nWe've been getting mysterious readings from the Belt."
-      if progress["outer"] == 0 then
-	 msg = msg.."\nPlease have a look around the outer planets."
-	 progress["outer"] = 1
-      end
+   if progress["mercury"] == 0 then msg = msg.."\nOur solar observation facilities at Mercury could use a hand." end
+   if #ghost_stns > 0          then msg = msg.."\nTourism is down at Venus." end
+   if progress["mars"] == 0    then msg = msg.."\nThe Mars terraforming mission needs some heat." end
+   if (progress["mercury"] > 1) and (progress["belt"] < 100) then msg = msg.."\nWe've been getting mysterious readings from the Belt." end
+   if (checkTotalProgress() > 2) and (#progress["juVisits"] < 5) then msg = msg.."\nComms are down at Jupiter." end
+   if (checkTotalProgress() > 3) and (progress["saturn"] < 100)  then msg = msg.."\nPeace talks with the Exuari of Saturn have broken down." end
+   if (checkTotalProgress() > 3) and (progress["outer"] == 0) then
+      msg = msg.."\nPlease have a look around the outer planets."
+      progress["outer"] = 1
    end
    setCommsMessage(msg)
    addCommsReply("Back", hqComms)
@@ -2278,6 +2276,7 @@ function spriteHit(ship, bc)
    else
       unknown:setCallSign("Friendly Sprite")
       unknown:sendCommsMessage(ship, "I like your pretty beams! Please enjoy this Ceres bounty.")
+      progress["belt"] = 100
       ship:addToShipLog("Ceres Secrets Discovered!", "Green")
       local c = bodies["Ceres"]["instance"]
       local cx,cy = c:getPosition()
@@ -2863,9 +2862,8 @@ onNewPlayerShip(
       --progress["mercury"] = 200
       --progress["venus"] = 100
       --ghost_stns = {}
-      --progress["mars"] = 1
-      --progress["mars"] = 200
-      --progress["belt"] = 1
+      --progress["mars"] = 202
+      --progress["belt"] = 100
       --progress["juVisits"] = {"JU-HQ","JU-IO","JU-EU","JU-GA","JU-CA"}
       --progress["saturn"] = 1000
       --progress["outer"] = 1
